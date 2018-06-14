@@ -15,6 +15,3 @@ RUN echo 'alias start="clear; bailador easy /code/Idea-Lab/bin/app.pl6"' >> ~/.b
 RUN echo 'alias start_mysql="/etc/init.d/mysql start;"' >> ~/.bashrc;
 
 CMD /etc/init.d/mysql start; bailador easy /code/Idea-Lab/bin/app.pl6
-
-# mysql -u coc -pcoc123! coc
-# explorer run -p 3123:3123 -v $(pwd)/mysql:/var/lib/mysql
