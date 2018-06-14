@@ -6,17 +6,17 @@ Implementing a REST interface using Perl 6 and Bailador
 # Docker
 Build Image in this repo:
 ```
-docker build --rm false -t Perl6_REST
+docker build --rm=false -t perl6_rest .
 ```
 
 Run it as a daemon:
 ```
 docker run -d --rm               \
-  --name my_Perl6_REST           \
+  --name my_perl6_rest           \
   -p 3123:3123                   \
   -v $(pwd)/code:/code           \
   -v $(pwd)/mysql:/var/lib/mysql \
-  Perl6_REST
+  perl6_rest
 ```
 
 # End Points
