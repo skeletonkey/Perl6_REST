@@ -6,85 +6,89 @@ use Bailador;
 use DBIish;
 use JSON::Fast;
 
+use Erik;
+use Jundy::DB;
+use Jundy::Model::User;
+use Jundy::View::User;
+
 my $version = '0.0.1';
-my $tmp_file = '/tmp/erik.out';
-
-my $dbh = DBIish.connect("mysql", :user<lab_worker>, :password<worker123!>, :database<idea_lab>);
-
-app.config.default-content-type = 'application/json';
+my $erik = Erik.new;
 
 get '/' => sub {
     content_type('text/html');
     my $temp = 1000.rand;
 
-    log("Hello World via log method: " ~ $temp);
+    $erik.log("Hello World via log method: " ~ $temp);
 
     template 'index.html', { version => $version ~ $temp };
 }
 
 get '/users' => sub () {
-    log("Get all users");
-    my $sth = $dbh.prepare('SELECT * FROM user');
+    $erik.log("Get all users");
+
+    status 200;
+
+    my @users = Jundy::Model::User.new.get;
+
+    status 404 unless @users.elems;
+
+    return Jundy::View::User.new.render(@users);
+}
+
+get '/users/raw' => sub () {
+    $erik.log("Get all users [RAW]");
+    my $db = Jundy::DB.new;
+    my $test = $db.dbh;
+    my $sth = $test.prepare('SELECT * FROM user');
     $sth.execute();
     my @rows = $sth.allrows(:array-of-hash);
 
     return to-json @rows;
 }
 
+get '/users/:uuid' => sub ($uuid) {
+    $erik.log("Looking up User ID: " ~ $uuid);
+
+    status 200;
+
+    my @users = Jundy::Model::User.new.get($uuid);
+
+    status 404 unless @users.elems;
+
+    return Jundy::View::User.new.render(@users);
+}
+
 post '/users' => sub {
-    my $params = from-json(request.body);
+    $erik.log("POST /users");
+    $erik.log("body: " ~ request.body);
 
-    log("POST /users name:" ~ $params<name> ~ "|full_name:" ~ $params<full_name> ~ "|password:" ~ $params<password>);
-    if $params<username>:exists and $params<name>:exists and $params<email>:exists and $params<password>:exists {
-        my $sth = $dbh.prepare(q:to/STATEMENT/);
-            INSERT INTO user
-            (uuid,   username, name, email, password, created)
-            VALUES
-            (uuid(), ?,        ?,    ?,     ?,        now())
-        STATEMENT
-        $sth.execute($params<username>, $params<name>, $params<email>, $params<password>);
+    my $session = session;
 
-        $sth = $dbh.prepare('SELECT id FROM user WHERE username = ?');
-        $sth.execute($params<username>);
-        my %user_data = $sth.row(:hash);
+    if $session<uuid>:exists {
+        my $data = Jundy::View::User.new.parse(request.body);
 
-        header('location', '/users/' ~ %user_data<uuid>);
-        log("Successfully Created");
-        status 201;
+        $erik.log("User created by " ~ $session<uuid>);
+        $erik.log("data - name:" ~ $data<username> ~ "|full_name:" ~ $data<name> ~ "|password:" ~ $data<password>);
+
+        my $uuid = Jundy::Model::User.new.create($data);
+        if $uuid {
+            header('location', '/users/' ~ $uuid);
+            status 201;
+        }
+        else {
+            status 400;
+        }
     }
     else {
-        log("Error");
-        status 400;
+        status 401;
+        $erik.log("User not logged in!")
     }
+
 
     return '';
 }
 
-get '/users/:uuid' => sub ($uuid) {
-    log("Looking up User ID: " ~ $uuid);
-    my $sth = $dbh.prepare(q:to/STATEMENT/);
-        SELECT * FROM user WHERE uuid = ?
-        STATEMENT
-    $sth.execute($uuid);
-    if $sth.rows == 1 {
-        my %data = $sth.row(:hash);
-        return to-json %data;
-    }
-    else {
-        status 404;
-        return '';
-    }
-}
-
-sub log ($msg) {
-    my $fh = $tmp_file.IO.open: :a;
-    $fh.say($msg);
-    $fh.close;
-}
-
 get '/healthcheck' => sub {
-    content_type('application/json');
-
     my %status = (
         overallStatus => "OK",
         results       => [],
@@ -92,6 +96,7 @@ get '/healthcheck' => sub {
 
 
     # mysql
+    my $dbh = Jundy::DB.new.dbh;
     my $sth = $dbh.prepare('SELECT 1');
     $sth.execute;
     my @data = $sth.row();
@@ -124,5 +129,61 @@ get '/healthcheck' => sub {
 
     return to-json %status;
 }
+
+get post '/logout' => sub {
+    my $session = session;
+    if $session<uuid>:exists {
+        $session<uuid>:delete;
+    }
+
+    status 200;
+    return '';
+}
+
+post '/login' => sub {
+    my $params = from-json(request.body);
+
+    my $status_code = 200;
+    my $return_data = '';
+    if $params<username>:exists and $params<password>:exists {
+        $erik.log("Log in attempt for " ~ $params<username>);
+        my $sth = Jundy::DB.new.dbh.prepare('SELECT uuid FROM user WHERE username = ? and password = ?');
+        $sth.execute($params<username>, $params<password>);
+        my %user_data = $sth.row(:hash);
+
+        if %user_data<uuid> {
+            $erik.log("User logged in: " ~ %user_data<uuid>);
+            my $session = session;
+            $session<uuid> = %user_data<uuid>;
+        }
+        else {
+            $status_code = 401;
+            $return_data = '{"error":"Unable to validate login information"}';
+        }
+    }
+    else {
+        $status_code = 401;
+        $return_data = '{"error":"User name or Password not provided"}';
+    }
+
+    status $status_code;
+    return $return_data;
+}
+
+## boards
+#post '/boards' => sub {
+#    my $session = session;
+
+#    my $status_code = 401;
+#    my $return_data = '{"error":"You are not logged in"}';
+
+#    if $session<uuid>:exists {
+#        $status_code = 200;
+#        $return_data = '{"data": "You are logged in - too bad there is no logic"}';
+#    }
+
+#    status $status_code;
+#    return $return_data;
+#}
 
 baile();

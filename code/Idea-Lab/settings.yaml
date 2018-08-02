@@ -1,3 +1,4 @@
-host: '0.0.0.0'
-port: 3123
-log-filter: ( 'severity' => '>=debug' )
+default-content-type: 'application/json'
+host:                 '0.0.0.0'
+log-filter:           ( 'severity' => '>=debug' )
+port:                 3123
