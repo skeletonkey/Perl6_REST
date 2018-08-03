@@ -27,14 +27,19 @@ docker run -d --rm               \
 * Create User: POST http://0.0.0.0:3123/users
 
 # Resources
-* Axioms of Web Architecture: https://www.w3.org/DesignIssues/Axioms.html
-* Bailador
+* Bailador & REST:
+  * Axioms of Web Architecture: https://www.w3.org/DesignIssues/Axioms.html
+  * Bailador
   * Main Page: https://github.com/Bailador/Bailador
   * Docs: https://github.com/Bailador/Bailador/tree/dev/doc
   * Examples: https://github.com/Bailador/Bailador/tree/dev/examples
-* HTTP Response: https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
-* Please Do Not Patch Like an Idiot: https://williamdurand.fr/2014/02/14/please-do-not-patch-like-an-idiot/
-*  REST API Design Rulebook by Mark Masse Published by O'Reilly Media, Inc., 2011
-* RESTful API Design Tips from Experience: https://medium.com/studioarmix/learn-restful-api-design-ideals-c5ec915a430f
-* Roy Thomas Fiedling's 2000 Ph.D. dissertation "Architectural Styles and the Design of Network-based Software Architectures": https://www.ics.uci.edu/~fielding/pubs/dissertation/top.htm
+  * HTTP Response: https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
+  * Please Do Not Patch Like an Idiot: https://williamdurand.fr/2014/02/14/please-do-not-patch-like-an-idiot/
+  *  REST API Design Rulebook by Mark Masse Published by O'Reilly Media, Inc., 2011
+  * RESTful API Design Tips from Experience: https://medium.com/studioarmix/learn-restful-api-design-ideals-c5ec915a430f
+  * Roy Thomas Fiedling's 2000 Ph.D. dissertation "Architectural Styles and the Design of Network-based Software Architectures": https://www.ics.uci.edu/~fielding/pubs/dissertation/top.htm
+* MVC
+  * https://medium.freecodecamp.org/simplified-explanation-to-mvc-5d307796df30
+  * https://developer.mozilla.org/en-US/docs/Web/Apps/Fundamentals/Modern_web_app_architecture/MVC_architecture
+
   
